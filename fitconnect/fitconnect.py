@@ -764,3 +764,16 @@ class FITConnectClient:
         # r_get_eventlog = self._authorized_get(f'/cases/{case_id}/events')
 
         return submission
+
+    def readEventLog(self, case_id):
+        '''Methode to read the Event Log entries for a specific case id
+
+        :param case_id: The case id for a specific submission
+        :type case_id: str
+        :return: The list of Events as dict
+        :rtype: dict
+        '''
+
+        r_get_eventlog = self._authorized_get(f'/cases/{case_id}/events')
+        return r_get_eventlog
+        
