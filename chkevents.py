@@ -6,6 +6,7 @@ import json
 #import base64
 #import jsonschema
 import logging
+import requests
 '''
 This Script is intended to read a log for a specific submission
 '''
@@ -35,20 +36,44 @@ fitc.activate_destination(destinationId)
 # get a list of available submissions
 status = fitc.readEventLog(caseId)
 
-events = json.loads(status.content.decode())['eventLog']
+events = json.loads(status.text)['eventLog']
+# Walk all events
 i=0
 for event in events:
     i += 1
-    (setHeader,setPayload,setSignature) = event.split(".")
-    
-    #setHeader = setHeader + "="*divmod(len(setHeader),4)[1]
-    #setHeader = base64.urlsafe_b64decode(setHeader)
-
-    #setPayload = setPayload + "="*divmod(len(setPayload),4)[1]
-    #setPayload = base64.urlsafe_b64decode(setPayload)
 
     jwsToken = jws.JWS()
     jwsToken.deserialize(event)
+    setKID = json.loads(jwsToken.objects['protected'])['kid']
+    setISS = json.loads(jwsToken.objects['payload'].decode('utf-8'))['iss']
+    setEvent = list(json.loads(jwsToken.objects['payload'].decode('utf-8'))['events'])[0]
 
+    print (f"Event {i}: kid: {setKID}\n\t issuer: {setISS}\n\t events: {setEvent}")
+
+    # Decide who issued the SET
+    if setISS.startswith("https://"):
+        status = requests.get(f"{setISS}/.well-known/jwks.json")
+        zsKeys = status
+        zsKeys = json.loads(zsKeys.text)['keys']
+        # print(zsKeys, len(zsKeys))
+
+        for zsKey in zsKeys:    
+            #print(f"SET kid: {setKID} \t ISS kid: {zsKey['kid']}")
+            if setKID == zsKey['kid']:
+                #print("Matching KID")
+                zsSigKey = zsKey
+                zsSigKID = zsKey['kid']
+                key = jwk.JWK(**zsSigKey)
+                verifySig = jwsToken.verify(key)
+            else:
+                print("KID Mismatch")
+    else:
+        print("Destination")
+
+    print (f"\t kid: {zsSigKID}\n\t {zsSigKey}")    
+
+
+    # pubSigKey = requests.get(issuerURL)
     # print (f"Event {i}: {event}\n{setHeader}\n{setPayload}\n{setSignature}")
-    print (f"Event {i}: {jwsToken.objects['protected']}\n\t {jwsToken.objects['payload'].decode('utf-8')}")
+    
+    
