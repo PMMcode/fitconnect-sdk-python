@@ -9,7 +9,7 @@ import semver
 import uuid
 from datetime import datetime
 from enum import Enum
-from jwcrypto import jwk, jwe
+from jwcrypto import jwk, jwe, jws
 
 log = logging.getLogger(__name__)
 log.addHandler(logging.NullHandler())
@@ -776,4 +776,42 @@ class FITConnectClient:
 
         r_get_eventlog = self._authorized_get(f'/cases/{case_id}/events')
         return r_get_eventlog
-        
+    
+    def verifyEventSignature (self, event):
+        '''Methode to verify the Signature of a SET
+
+        :param Event: The Event-Object
+        '''
+        jwsToken = jws.JWS()
+        jwsToken.deserialize(event)
+        setKID = json.loads(jwsToken.objects['protected'])['kid']
+        setISS = json.loads(jwsToken.objects['payload'].decode('utf-8'))['iss']
+
+        # Decide who issued the SET
+        if setISS.startswith("https://"):
+            zsKeys = requests.get(f"{setISS}/.well-known/jwks.json")
+            
+            # Find matchin key
+            for zsKey in json.loads(zsKeys.text)['keys']:    
+                if setKID == zsKey['kid']:
+                    zsSigKey = zsKey
+                    key = jwk.JWK(**zsSigKey)
+                    jwsToken.verify(key)
+                else:
+                    print("KID Mismatch")
+        else:
+            # verify Destination exists in Environment configured
+            response = self.get_destination(setISS)
+            destURL = response.url
+            zsKey = requests.get(f"{destURL}/keys/{setKID}")
+            zsKey = json.loads(zsKey.text)
+
+            if setKID == zsKey['kid']:
+                zsSigKey = zsKey
+                key = jwk.JWK(**zsSigKey)
+                jwsToken.verify(key)
+            else:
+                print("KID Mismatch")
+
+
+        return jwsToken

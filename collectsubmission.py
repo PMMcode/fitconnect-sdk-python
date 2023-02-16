@@ -17,9 +17,6 @@ config = read_config_subscriber('conf/subscriber.yaml')
 # initialize SDK
 fitc = FITConnectClient(Environment[config['sdk']['environment']], config['sdk']['client_id'], config['sdk']['client_secret'])
 
-# activate destination
-#fitc.activate_destination(config['destination_id'])
-
 # get a list of available submissions
 submissions = fitc.available_submissions()
 
