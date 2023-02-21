@@ -781,6 +781,8 @@ class FITConnectClient:
         '''Methode to verify the Signature of a SET
 
         :param Event: The Event-Object
+        :type event: object
+        :return: JWS-Token with verifikation ststus
         '''
         jwsToken = jws.JWS()
         jwsToken.deserialize(event)
