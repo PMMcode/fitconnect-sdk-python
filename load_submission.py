@@ -42,7 +42,7 @@ while True:
 submission_id = submissions[number]['submissionId']
 print (f"Selected Submission is: {submission_id}")
 
-# collecting submission 
+# collect selected submission
 try:
     print(f"\n== Retrieving submission {submission_id} ==")
     submission = fitc.retrieve_submission(submission_id, config['private_key_decryption'])
@@ -69,3 +69,8 @@ except json.decoder.JSONDecodeError as e:
     print(f"Unparsable json in submission {submission_id}")
 except ValueError as e:
     print("ValueError", e)
+
+# Todos
+# read events
+# verify submission
+# accept submission
