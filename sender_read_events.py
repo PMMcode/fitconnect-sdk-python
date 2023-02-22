@@ -28,29 +28,31 @@ logging.getLogger('fitconnect').level = logging.INFO
 config = read_config_sender((args.config))
 
 # initialize SDK
-fitc = FITConnectClient(Environment[config['sdk']['environment']], config['sdk']['client_id'], config['sdk']['client_secret'])
+fitc = FITConnectClient(Environment[config['sdk']['environment']], config['sdk']['client_id'], config['sdk']['client_secret'], True)
 
 # get list of events for case_id
 status = fitc.readEventLog(args.case_id)
-events = json.loads(status.text)['eventLog']
+if status.ok:
+    events = json.loads(status.text)['eventLog']
 
-# Walk all events
-i=0
-while i < len(events):
-    # verify signature
-    event = fitc.verifyEventSignature(events[i])
+    # Walk all events
+    i=0
+    while i < len(events):
+        # verify signature
+        event = fitc.verifyEventSignature(events[i])
 
-    if event.is_valid:
-        kidSET = event.jose_header['kid']
-        issSET = json.loads(event.payload.decode('utf-8'))['iss']
-        eventSET = list(json.loads(event.payload.decode('utf-8'))['events'])[0]
-        print (f"Event {i}: kid: {kidSET}\n\t issuer: {issSET}\n\t events: {eventSET}")
-        print("\t Signatur ist gültig.")
-        if args.verbose:
-            print(json.dumps(event.jose_header, indent="\t") + '\n')
-            print(json.dumps(json.loads(event.payload.decode('utf-8')), indent="\t") + '\n')
-    else:
-        print("\t Signatur ist ungültig.")
-    
-    i += 1
-    
+        if event.is_valid:
+            kidSET = event.jose_header['kid']
+            issSET = json.loads(event.payload.decode('utf-8'))['iss']
+            eventSET = list(json.loads(event.payload.decode('utf-8'))['events'])[0]
+            print (f"Event {i}: kid: {kidSET}\n\t issuer: {issSET}\n\t events: {eventSET}")
+            print("\t Signatur ist gültig.")
+            if args.verbose:
+                print(json.dumps(event.jose_header, indent="\t") + '\n')
+                print(json.dumps(json.loads(event.payload.decode('utf-8')), indent="\t") + '\n')
+        else:
+            print("\t Signatur ist ungültig.")
+        
+        i += 1
+else:
+    print("CaseID", args.case_id, "not found in", config['sdk']['environment'],".")    
