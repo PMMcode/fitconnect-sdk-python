@@ -1,5 +1,6 @@
 from read_config import read_config_sender
 from fitconnect import FITConnectClient, Environment
+from datetime import datetime
 import argparse
 import json
 import logging
@@ -45,7 +46,9 @@ if status.ok:
             kidSET = event.jose_header['kid']
             issSET = json.loads(event.payload.decode('utf-8'))['iss']
             eventSET = list(json.loads(event.payload.decode('utf-8'))['events'])[0]
-            print (f"Event {i}: kid: {kidSET}\n\t issuer: {issSET}\n\t events: {eventSET}")
+            iatDateTime = json.loads(event.payload.decode('utf-8'))['iat']
+            iatDateTime = datetime.utcfromtimestamp(iatDateTime).strftime('%Y-%m-%d %H:%M:%S')
+            print (f"Event {i}: date: {iatDateTime}\n\t kid: {kidSET}\n\t issuer: {issSET}\n\t events: {eventSET}")
             print("\t Signatur ist gültig.")
             if args.verbose:
                 print(json.dumps(event.jose_header, indent="\t") + '\n')

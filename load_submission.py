@@ -24,7 +24,7 @@ submissions = fitc.available_submissions()
 print("Select one of the following submissions for retrival:")
 index=0
 for submission in submissions:
-    print(f"{index}: {submission['submissionId']}")
+    print(f"{index}: Message {submission['submissionId']}  Case {submission['caseId']}")
     index=index + 1
 
 maxSelect = len(submissions)-1
