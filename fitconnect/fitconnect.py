@@ -753,16 +753,19 @@ class FITConnectClient:
         # handle attachments
         attachment_ids = submission['attachments']
         attachments = {}
+        encryptedAttachments = {}
         for attachment_id in attachment_ids:
             r_get_attachment = self._authorized_get(f'/submissions/{submission_id}/attachments/{attachment_id}')
             log.info(f'Attachment retrieved (submission_id = {submission_id}, attachment_id = {attachment_id})')
 
+            encryptedAttachments[attachment_id] = r_get_attachment.text # save encrypted attachments for later
             attachments[attachment_id] = self.decrypt(private_key, r_get_attachment.text) # TODO: error handling
 
             # verify hash values from metadata for attachment
             self.verify_metadata_attachment_hash(submission['metadata'], attachment_id, attachments[attachment_id])
 
         submission['attachments'] = attachments
+        submission['encryptedAttachments'] = encryptedAttachments
 
         # TODO: retrieve security event log
         # case_id = submission['caseId']

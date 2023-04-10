@@ -5,14 +5,17 @@ import argparse
 import json
 import jsonschema
 import logging
+import os
 
 # parse command line arguments
 parser = argparse.ArgumentParser(
                     prog = 'subscriber_read_submission',
-                    description = 'This script uses a subscriber client to retrieve all submissions the subscriber has access to')
+                    description = 'This script uses a subscriber client to retrieve a specific submission.')
 
 parser.add_argument('-c', '--config', help='Path to config file', default='conf/subscriber.yaml')
 parser.add_argument('-d', '--data_dir', help='Path to config file', default='./subscriber-data')
+parser.add_argument('-v', '--verbose', help='Print decrypted metadata and data on console', action=argparse.BooleanOptionalAction)
+parser.add_argument('submission_id', help='The submission that is being read')
 
 args = parser.parse_args()
 
@@ -29,13 +32,63 @@ fitc = FITConnectClient(Environment[config['sdk']['environment']], config['sdk']
 # activate destination
 fitc.activate_destination(config['destination_id'])
 
-# get a list of available submissions
+# check for submission
 submissions = fitc.available_submissions()
-
-index = 1
-print (f"Submissions available for {config['destination_id']}")
+print (f"Looking for Submission {args.submission_id} in {config['destination_id']}")
 for submission in submissions:
     submission_id = submission['submissionId']
-    case_id = submission['caseId']
-    print (f"{index}: Submission: {submission_id}  Case: {case_id}")
-    index=index+1
+    if submission_id == args.submission_id:
+        print (f"Sumission available")
+        break
+else:
+    print (f"Submission not found")
+    quit()
+
+# Verify folder exist, else create
+try:
+    if not os.path.exists(f'{args.data_dir}/{submission_id}'):
+        os.makedirs(f'{args.data_dir}/{submission_id}')
+except Exception as e:
+    print("File odr Path Error", e)
+
+# try reading submission and save files
+try:
+    print(f"\n== Retrieving submission {submission_id} ==")
+    submission = fitc.retrieve_submission(submission_id, config['private_key_decryption'])
+
+    if submission['metadata']:
+        if args.verbose:
+            print("=== Metadaten ===")
+            print(json.dumps(submission['metadata'], indent=2, ensure_ascii=False).encode('utf-8').decode())
+        with open (f'{args.data_dir}/{submission_id}/metadata-decrypted.json','wt') as f:
+            json.dump(submission['metadata'], f)
+        with open (f'{args.data_dir}/{submission_id}/metadata-encrypted.jwt','wt') as f:
+            f.write(submission['encryptedMetadata'])
+
+    if submission['data_json']:
+        if args.verbose:
+            print("\n=== Fachdaten ===")
+            print(json.dumps(submission['data_json'], indent=2, ensure_ascii=False).encode('utf-8').decode())
+        with open (f'{args.data_dir}/{submission_id}/data-decrypted.json','wt') as f:
+            json.dump(submission['metadata'], f)
+        with open (f'{args.data_dir}/{submission_id}/data-encrypted.jwt','wt') as f:
+            f.write(submission['encryptedMetadata'])
+
+
+    for attachment_id, attachment in submission['attachments'].items():
+        if args.verbose:
+            print(f"\n=== Anhang ({attachment_id}) ===")
+        with open (f'{args.data_dir}/{submission_id}/{attachment_id}-encrypted.jwt','wt') as f:
+            f.write(submission['encryptedMetadata'])       
+        if attachment.startswith(b'%PDF'):
+            with open(f'{args.data_dir}/{submission_id}/{attachment_id}-data.pdf', 'wb') as f:
+                f.write(attachment)
+                print("File written (Type: pdf)")
+except InvalidJWEData as e:
+    print(f"Could not decrypt submission {submission_id}")
+except jsonschema.exceptions.ValidationError as e:
+    print(f"Invalid schema in submission {submission_id}:", e)
+except json.decoder.JSONDecodeError as e:
+    print(f"Unparsable json in submission {submission_id}")
+except ValueError as e:
+    print("ValueError", e)

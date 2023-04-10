@@ -9,10 +9,9 @@ import logging
 # parse command line arguments
 parser = argparse.ArgumentParser(
                     prog = 'subscriber_list_submissions',
-                    description = 'This script uses a subscriber client to retrieve all submissions the subscriber has access to')
+                    description = 'This script uses a subscriber client to list all available submissions the subscriber has access to')
 
 parser.add_argument('-c', '--config', help='Path to config file', default='conf/subscriber.yaml')
-parser.add_argument('-d', '--data_dir', help='Path to config file', default='./subscriber-data')
 
 args = parser.parse_args()
 
