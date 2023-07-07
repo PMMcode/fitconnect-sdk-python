@@ -70,7 +70,7 @@ try:
             print("\n=== Fachdaten ===")
             print(json.dumps(submission['data_json'], indent=2, ensure_ascii=False).encode('utf-8').decode())
         with open (f'{args.data_dir}/{submission_id}/data-decrypted.json','wt') as f:
-            json.dump(submission['metadata'], f)
+            json.dump(submission['data_json'], f)
         with open (f'{args.data_dir}/{submission_id}/data-encrypted.jwt','wt') as f:
             f.write(submission['encryptedMetadata'])
 
