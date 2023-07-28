@@ -7,6 +7,7 @@ import re
 import requests
 import semver
 import uuid
+import decimal
 from datetime import datetime
 from enum import Enum
 from jwcrypto import jwk, jwe, jws
@@ -50,6 +51,8 @@ _ENVIRONMENT_CONFIG = {
 
 PROBLEM_PREFIX = 'https://schema.fitko.de/fit-connect/submission-api/problems/'
 METADATA_SCHEMA_URI = 'https://schema.fitko.de/fit-connect/metadata/'
+SET_PAYLOAD_SCHEMA_URI = 'https://schema.fitko.de/fit-connect/set-payload/'
+EVENT_URI = 'https://schema.fitko.de/fit-connect/events/'
 SEMVER_REGEX = '[1-9]+\.[0-9]+\.[0-9]+'
 
 class ProblemDetailError(Exception):
@@ -825,3 +828,23 @@ class FITConnectClient:
 
 
         return jwsToken
+
+    def writeEvent (self, submission, event):
+        '''Methode to write a signed event as SET
+            :param case_id: Case-ID the Event is for
+        '''
+        setPayload = {
+                "$schema": SET_PAYLOAD_SCHEMA_URI + "1.0.0/set-payload.schema.json",
+                "jiti": "",
+                "iss": submission['destinationId'],
+                "iat": 0,
+                "sub": "submission:"+submission['submissionId'],
+                "txn": "case:"+submission['caseId'],
+                "events": {
+                    # eventPayload            
+                    }
+                }
+        
+        setPayload['events']  = EVENT_URI + event +"-submission"
+
+        print (f"Case ID: {submission['caseId']}\n{setPayload}\n{event}")

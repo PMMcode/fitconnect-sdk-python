@@ -92,3 +92,7 @@ except json.decoder.JSONDecodeError as e:
     print(f"Unparsable json in submission {submission_id}")
 except ValueError as e:
     print("ValueError", e)
+
+print(f"Submission {submission_id} erfolgreich gelesen.")
+
+fitc.writeEvent(submission, 'accept')
