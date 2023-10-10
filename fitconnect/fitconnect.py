@@ -8,9 +8,9 @@ import requests
 import semver
 import uuid
 import decimal
-from datetime import datetime
+from datetime import datetime, timezone
 from enum import Enum
-from jwcrypto import jwk, jwe, jws
+from jwcrypto import jwk, jwe, jws, jwt
 
 log = logging.getLogger(__name__)
 log.addHandler(logging.NullHandler())
@@ -829,22 +829,74 @@ class FITConnectClient:
 
         return jwsToken
 
-    def writeEvent (self, submission, event):
-        '''Methode to write a signed event as SET
-            :param case_id: Case-ID the Event is for
+    def collectAuthTags(self, submission):
+        '''Method to collect the authTags from a submission
+            :param submission: Collected Submission with encrypted data to read authTags from
+            :return authenticationTags-Object: Return all authetication tags for data in a submission
         '''
+        
+        # ToDo: need a function to verify authTag is present an return is from encrypted data
+        
+        # Gather all authTags and add to structure 
+        metadataTag = submission['encryptedMetadata'].split('.')[4]
+        dataTag = submission['encryptedData'].split('.')[4]        
+        attachmentsTag = {}
+        for attachmentID in submission['encryptedAttachments']:
+            attachmentsTag[attachmentID] = submission['encryptedAttachments'][attachmentID].split('.')[4]
+        
+        authentication_tags = {"metadata": metadataTag}        
+        if dataTag is not None:
+            authentication_tags["data"] = dataTag        
+        if attachmentsTag is not None:
+            authentication_tags["attachments"] = attachmentsTag
+                
+        return {"authenticationTags":authentication_tags}
+    
+    def writeEvent (self, submission, signingKey, event):
+        '''Methode to write a signed event as SET
+            :param submisson: Submission with Case-ID the Event is for
+        '''
+        # Load private key
+        private_key = jwk.JWK.from_json(json.dumps(signingKey))
+
+        # Create Header for SET
+        setHeader = {
+            "typ": "secevent+jwt",
+            "alg": "PS512",
+            "kid": private_key['kid']
+        }
+        
+        # Create Payload for SET
         setPayload = {
                 "$schema": SET_PAYLOAD_SCHEMA_URI + "1.0.0/set-payload.schema.json",
-                "jiti": "",
+                "jti": str(uuid.uuid4()),
                 "iss": submission['destinationId'],
-                "iat": 0,
+                "iat": int(datetime.now(timezone.utc).timestamp()),
                 "sub": "submission:"+submission['submissionId'],
                 "txn": "case:"+submission['caseId'],
                 "events": {
                     # eventPayload            
                     }
                 }
+                
+        # Build authTags List and add to SET Payload if _not_ empty
+        authenticationTags = self.collectAuthTags(submission)
+        if authenticationTags is not None:
+            setPayload['events'][EVENT_URI + event +"-submission"] = authenticationTags
         
-        setPayload['events']  = EVENT_URI + event +"-submission"
-
-        print (f"Case ID: {submission['caseId']}\n{setPayload}\n{event}")
+        # Convert setHeader and setPayload into JSON
+        # setPayload = json.dumps(setPayload, indent=4)
+        # setHeader = json.dumps(setHeader, indent=4)
+        token = jwt.JWT(header=setHeader, claims=setPayload)
+        token.make_signed_token(private_key)
+        
+        print (f"Case ID: {submission['caseId']}\n{setHeader}\n{setPayload}\n{token}\n{event}")
+        
+        # Sending SET
+        path = f"/cases/{submission['caseId']}/events"
+        content_type = "application/jose"
+        # r_post_event = self._authorized_post(path, data=token)
+        self._refresh_access_token()
+        r_post_event = requests.post(self.submission_api_url + path, headers = {'Authorization': 'Bearer ' + self.access_token, 'Content-Type': content_type}, data=token.serialize())
+        print(f"Status: {r_post_event.status_code}")
+        print("HOPE")

@@ -1,5 +1,6 @@
 destination_id: ''
 private_key_decryption_file: privateKey_decryption.jwk.json
+private_key_signing_file: privateKey_signing.jwk.json
 
 sdk:
   environment: TESTING
