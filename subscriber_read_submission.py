@@ -38,10 +38,10 @@ print (f"Looking for Submission {args.submission_id} in {config['destination_id'
 for submission in submissions:
     submission_id = submission['submissionId']
     if submission_id == args.submission_id:
-        print (f"Sumission available")
+        print ("Sumission available")
         break
 else:
-    print (f"Submission not found")
+    print ("Submission not found")
     quit()
 
 # Verify folder exist, else create
@@ -60,9 +60,9 @@ try:
         if args.verbose:
             print("=== Metadaten ===")
             print(json.dumps(submission['metadata'], indent=2, ensure_ascii=False).encode('utf-8').decode())
-        with open (f'{args.data_dir}/{submission_id}/metadata-decrypted.json','wt') as f:
+        with open (f'{args.data_dir}/{submission_id}/metadata-decrypted.json',mode='wt', encoding='utf-8') as f:
             json.dump(submission['metadata'], f)
-        with open (f'{args.data_dir}/{submission_id}/metadata-encrypted.jwt','wt') as f:
+        with open (f'{args.data_dir}/{submission_id}/metadata-encrypted.jwt',mode='wt', encoding='utf-8') as f:
             f.write(submission['encryptedMetadata'])
         print(f"Metadata verified: {submission['metadata_verified']}")
 
@@ -70,9 +70,9 @@ try:
         if args.verbose:
             print("\n=== Fachdaten ===")
             print(json.dumps(submission['data_json'], indent=2, ensure_ascii=False).encode('utf-8').decode())
-        with open (f'{args.data_dir}/{submission_id}/data-decrypted.json','wt') as f:
+        with open (f'{args.data_dir}/{submission_id}/data-decrypted.json',mode='wt',encoding='utf-8') as f:
             json.dump(submission['data_json'], f)
-        with open (f'{args.data_dir}/{submission_id}/data-encrypted.jwt','wt') as f:
+        with open (f'{args.data_dir}/{submission_id}/data-encrypted.jwt',mode='wt',encoding='utf-8') as f:
             f.write(submission['encryptedMetadata'])
         print(f"Data verified: {submission['data_json_verified']}")
 
@@ -80,8 +80,8 @@ try:
     for attachment_id, attachment in submission['attachments'].items():
         if args.verbose:
             print(f"\n=== Anhang ({attachment_id}) ===")
-        with open (f'{args.data_dir}/{submission_id}/{attachment_id}-encrypted.jwt','wt') as f:
-            f.write(submission['encryptedMetadata'])       
+        with open (f'{args.data_dir}/{submission_id}/{attachment_id}-encrypted.jwt',mode='wt', encoding='utf-8') as f:
+            f.write(submission['encryptedAttachments'][attachment_id])       
         if attachment.startswith(b'%PDF'):
             with open(f'{args.data_dir}/{submission_id}/{attachment_id}-data.pdf', 'wb') as f:
                 f.write(attachment)
