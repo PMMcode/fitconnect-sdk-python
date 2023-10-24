@@ -151,3 +151,4 @@ cython_debug/
 
 # debug config VSCode
 .vscode/launch.json
+poetry.lock
