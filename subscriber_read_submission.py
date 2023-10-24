@@ -64,6 +64,7 @@ try:
             json.dump(submission['metadata'], f)
         with open (f'{args.data_dir}/{submission_id}/metadata-encrypted.jwt','wt') as f:
             f.write(submission['encryptedMetadata'])
+        print(f"Metadata verified: {submission['metadata_verified']}")
 
     if submission['data_json']:
         if args.verbose:
@@ -73,6 +74,7 @@ try:
             json.dump(submission['data_json'], f)
         with open (f'{args.data_dir}/{submission_id}/data-encrypted.jwt','wt') as f:
             f.write(submission['encryptedMetadata'])
+        print(f"Data verified: {submission['data_json_verified']}")
 
 
     for attachment_id, attachment in submission['attachments'].items():
@@ -95,4 +97,4 @@ except ValueError as e:
 
 print(f"Submission {submission_id} erfolgreich gelesen.")
 
-fitc.writeEvent(submission, 'accept')
+# fitc.writeEvent(submission, 'accept')

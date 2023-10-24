@@ -683,7 +683,7 @@ class FITConnectClient:
             raise ValueError("Data missing in metadata['contentStructure']")
 
         if not self.ignore_metadata_hashes and data_decrypted_hash != metadata['contentStructure']['data']['hash']['content']:
-            raise ValueError("Invalid attachment hash!")
+            raise ValueError("Invalid data hash!")
 
     def verify_metadata_attachment_hash(self, metadata, attachment_id, attachment_decrypted):
         '''verify hash value from metadata for the given attachement
@@ -743,6 +743,7 @@ class FITConnectClient:
         # decrypt and validate metadata
         submission['metadata'] = self.decrypt_json(private_key, submission['encryptedMetadata']) # TODO: error handling
         self._validate_metadata_schema(submission['metadata'])
+        submission['metadata_verified'] = True
 
         # decrypt and validata data
         data_decrypted = self.decrypt(private_key, submission['encryptedData']) # TODO: error handling
@@ -752,6 +753,8 @@ class FITConnectClient:
             submission['data_json'] = json.loads(data_decrypted)
         except json.decoder.JSONDecodeError as e:
             raise e # TODO: decode xml
+        
+        submission['data_json_verified'] = True
 
         # handle attachments
         attachment_ids = submission['attachments']
