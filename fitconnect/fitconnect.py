@@ -883,9 +883,22 @@ class FITConnectClient:
                 }
                 
         # Build authTags List and add to SET Payload if _not_ empty
-        authenticationTags = self.collectAuthTags(submission)
-        if authenticationTags is not None:
-            setPayload['events'][EVENT_URI + event +"-submission"] = authenticationTags
+        if event == 'accept':
+            authenticationTags = self.collectAuthTags(submission)
+            if authenticationTags is not None:
+                setPayload['events'][EVENT_URI + event +"-submission"] = authenticationTags
+        
+        if event == 'reject':
+            setPayload['events'][EVENT_URI + event +"-submission"] = {
+                        "problems": [
+                            {
+                                "type": "https://schema.fitko.de/fit-connect/events/problems/authentication-tag-incorrect",
+                                "title": "Das Authentication Tag des Metadatensatzes ist ungültig",
+                                "detail": "Das Authentication Tag des Metadatensatzes stimmt nicht mit dem im Submit-Submission-Event angegebenen Wert überein.",
+                                "instance": "metadata"
+                            }
+                        ]
+            }
         
         # Convert setHeader and setPayload into JSON
         # setPayload = json.dumps(setPayload, indent=4)
