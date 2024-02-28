@@ -888,6 +888,21 @@ class FITConnectClient:
             if authenticationTags is not None:
                 setPayload['events'][EVENT_URI + event +"-submission"] = authenticationTags
         
+        if event == 'accept-problem':
+            event = 'accept'
+            setPayload['events'][EVENT_URI + event +"-submission"] = {}
+            authenticationTags = self.collectAuthTags(submission)
+            problems = {"problems":[
+                            {
+                                "type": "https://schema.fitko.de/fit-connect/events/problems/authentication-tag-incorrect",
+                                "title": "Das Authentication Tag des Metadatensatzes ist ungültig",
+                                "detail": "Das Authentication Tag des Metadatensatzes stimmt nicht mit dem im Submit-Submission-Event angegebenen Wert überein.",
+                                "instance": "metadata"
+                            }
+                        ]}
+            setPayload['events'][EVENT_URI + event +"-submission"]["problems"] = problems["problems"]
+            setPayload['events'][EVENT_URI + event +"-submission"]["authenticationTags"]=authenticationTags["authenticationTags"]
+        
         if event == 'reject':
             setPayload['events'][EVENT_URI + event +"-submission"] = {
                         "problems": [
@@ -896,6 +911,12 @@ class FITConnectClient:
                                 "title": "Das Authentication Tag des Metadatensatzes ist ungültig",
                                 "detail": "Das Authentication Tag des Metadatensatzes stimmt nicht mit dem im Submit-Submission-Event angegebenen Wert überein.",
                                 "instance": "metadata"
+                            },
+                            {
+                                "type": "https://schema.fitko.de/fit-connect/events/problems/test",
+                                "title": "Die Verrschlüsselung der Daten entricht nicht den Vorgaben",
+                                "detail": "Die Anlagen des Antrages wurden falsch verschlüsselt. (Wenn Du das lessen kannst, hast du es richtig gemacht).",
+                                "instance": "data"
                             }
                         ]
             }
