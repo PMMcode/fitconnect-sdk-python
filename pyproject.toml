@@ -12,6 +12,7 @@ jwcrypto = "^1.4"
 strictyaml = "^1.6.1"
 jsonschema = "^4.4.0"
 semver = { version = "^3.0.0.dev3", allow-prereleases = true }
+xmltodict = "^0.13.0"
 
 [tool.poetry.dev-dependencies]
 jwcrypto = { git = "https://github.com/latchset/jwcrypto.git" }

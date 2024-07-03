@@ -66,16 +66,26 @@ try:
             f.write(submission['encryptedMetadata'])
         print(f"Metadata verified: {submission['metadata_verified']}")
 
-    if submission['data_json']:
-        if args.verbose:
-            print("\n=== Fachdaten ===")
-            print(json.dumps(submission['data_json'], indent=2, ensure_ascii=False).encode('utf-8').decode())
-        with open (f'{args.data_dir}/{submission_id}/data-decrypted.json',mode='wt',encoding='utf-8') as f:
-            json.dump(submission['data_json'], f)
-        with open (f'{args.data_dir}/{submission_id}/data-encrypted.jwt',mode='wt',encoding='utf-8') as f:
-            f.write(submission['encryptedMetadata'])
-        print(f"Data verified: {submission['data_json_verified']}")
-
+    if submission['data_MimeType'] == "application/json":
+        if submission['data_json']:
+            if args.verbose:
+                print("\n=== Fachdaten ===")
+                print(json.dumps(submission['data_json'], indent=2, ensure_ascii=False).encode('utf-8').decode())
+            with open (f'{args.data_dir}/{submission_id}/data-decrypted.json',mode='wt',encoding='utf-8') as f:
+                json.dump(submission['data_json'], f)
+            with open (f'{args.data_dir}/{submission_id}/data-encrypted.jwt',mode='wt',encoding='utf-8') as f:
+                f.write(submission['encryptedData'])
+            print(f"Data verified: {submission['data_verified']}")
+    elif submission['data_MimeType'] == "application/xml":
+        if submission['data_xml']:
+            if args.verbose:
+                print("\n=== Fachdaten ===")
+                print(submission['data_xml'])
+            with open (f'{args.data_dir}/{submission_id}/data-decrypted.xml',mode='wt',encoding='utf-8') as f:
+                f.write(submission['data_xml'])
+            with open (f'{args.data_dir}/{submission_id}/data-encrypted.jwt',mode='wt',encoding='utf-8') as f:
+                f.write(submission['encryptedData'])
+            print(f"Data verified: {submission['data_verified']}")
 
     for attachment_id, attachment in submission['attachments'].items():
         if args.verbose:

@@ -8,6 +8,7 @@ import requests
 import semver
 import uuid
 import decimal
+import xmltodict
 from datetime import datetime, timezone
 from enum import Enum
 from jwcrypto import jwk, jwe, jws, jwt
@@ -748,13 +749,20 @@ class FITConnectClient:
         # decrypt and validata data
         data_decrypted = self.decrypt(private_key, submission['encryptedData']) # TODO: error handling
         self.verify_metadata_data_hash(submission['metadata'], data_decrypted)
+        
+        data_MimeType = submission['metadata']['contentStructure']['data']['submissionSchema']['mimeType']
+        submission['data_MimeType'] = data_MimeType
 
         try:
-            submission['data_json'] = json.loads(data_decrypted)
+            if data_MimeType == "application/json":
+                submission['data_json'] = json.loads(data_decrypted)
+            elif data_MimeType == "application/xml":
+                data_dict = xmltodict.parse(data_decrypted.decode('utf-8'))
+                submission['data_xml'] = xmltodict.unparse(data_dict, pretty=True)
         except json.decoder.JSONDecodeError as e:
             raise e # TODO: decode xml
         
-        submission['data_json_verified'] = True
+        submission['data_verified'] = True
 
         # handle attachments
         attachment_ids = submission['attachments']
