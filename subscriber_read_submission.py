@@ -96,6 +96,13 @@ try:
             with open(f'{args.data_dir}/{submission_id}/{attachment_id}-data.pdf', 'wb') as f:
                 f.write(attachment)
                 print("File written (Type: pdf)")
+        elif attachment.startswith(b'<?xml'):
+            with open(f'{args.data_dir}/{submission_id}/{attachment_id}-data.xml', 'wb') as f:
+                f.write(attachment)
+                print("File written (Type: xml)")
+        else:
+            print("Unbekannter Filetyp, nicht decodiert")
+            
 except InvalidJWEData as e:
     print(f"Could not decrypt submission {submission_id}")
 except jsonschema.exceptions.ValidationError as e:
