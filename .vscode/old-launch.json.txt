@@ -1,0 +1,19 @@
+{
+    // Use IntelliSense to learn about possible attributes.
+    // Hover to view descriptions of existing attributes.
+    // For more information, visit: https://go.microsoft.com/fwlink/?linkid=830387
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "name": "Python: Current File",
+            "type": "python",
+            "request": "launch",
+            "program": "'${file}'",
+            //"args": "0efcd268-1e78-4d4a-b9b2-4fc8097874c0",
+            //"args": "-c .\\conf\\subscriber_GSC_testing.yaml -d C:\\Users\\PeterMelichar\\Downloads\\ '2132ab64-08e4-4065-b0cf-292a506f83ca'",
+            "args": "-c './conf/subscriber_GSC_testing.yaml' -v 0f5e0b94-60e2-41c0-b0ca-e1b461cd459d",
+            "console": "integratedTerminal",
+            "justMyCode": true
+        }
+    ]
+}

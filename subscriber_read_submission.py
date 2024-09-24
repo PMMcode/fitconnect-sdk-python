@@ -12,7 +12,7 @@ parser = argparse.ArgumentParser(
                     prog = 'subscriber_read_submission',
                     description = 'This script uses a subscriber client to retrieve a specific submission.')
 
-parser.add_argument('-c', '--config', help='Path to config file', default='conf/subscriber.yaml')
+parser.add_argument('-c', '--config', help='Path to config file', default='./conf/subscriber.yaml')
 parser.add_argument('-d', '--data_dir', help='Path to config file', default='./subscriber-data')
 parser.add_argument('-v', '--verbose', help='Print decrypted metadata and data on console', action=argparse.BooleanOptionalAction)
 parser.add_argument('submission_id', help='The submission that is being read')
